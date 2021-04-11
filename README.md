@@ -10,6 +10,8 @@ Java や他のサーバー向けソフトウェアのコンソールを Discord 
 # Config
 BungeeCord や一部の Java プロセスでは `-Djline.terminal=jline.UnsupportedTerminal` をつけないと動きません。
 
+Discord Developers のサイトにて、Bot 設定を開き `PRESENCE INTENT` と `SERVER MEMBERS INTENT` をオンにする必要があるかもしれません。
+
 ```Yaml
 WorkingDirectory: bungee_server
 CloseCommand: stop

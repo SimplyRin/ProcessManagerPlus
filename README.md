@@ -12,6 +12,8 @@ BungeeCord や一部の Java プロセスでは `-Djline.terminal=jline.Unsuppor
 
 Discord Developers のサイトにて、Bot 設定を開き `PRESENCE INTENT` と `SERVER MEMBERS INTENT` をオンにする必要があるかもしれません。
 
+`Discord.AdminList` に登録されているユーザーからのみコマンド送信を許可するようになっているので、万が一第三者がチャットへのアクセス権限を手に入れたとしても多分安心です多分ね。
+
 ```Yaml
 WorkingDirectory: bungee_server
 CloseCommand: stop

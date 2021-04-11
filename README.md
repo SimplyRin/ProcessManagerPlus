@@ -3,6 +3,10 @@ Java や他のサーバー向けソフトウェアのコンソールを Discord 
 
 いちいち SSH にアクセスしたりするのが面倒な人や管理者同士でコンソールアクセスを共有したい人におすすめです。
 
+コマンド送信にも対応してます
+
+![console](/images/console.png)
+
 # Config
 BungeeCord や一部の Java プロセスでは `-Djline.terminal=jline.UnsupportedTerminal` をつけないと動きません。
 

@@ -14,6 +14,7 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.requests.GatewayIntent;
+import net.dv8tion.jda.api.requests.restaction.MessageAction;
 import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.md_5.bungee.config.Configuration;
@@ -110,7 +111,7 @@ public class Main {
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override
 			public void run() {
-				forceSendQueue();
+				forceSendQueue(true);
 			}
 		});
 		this.sendQueue();
@@ -154,7 +155,7 @@ public class Main {
 			@Override
 			public void run() {
 				while (true) {
-					forceSendQueue();
+					forceSendQueue(false);
 
 					try {
 						Thread.sleep(1000 * 3);
@@ -165,7 +166,7 @@ public class Main {
 		}.start();
 	}
 
-	public void forceSendQueue() {
+	public void forceSendQueue(boolean isComplete) {
 		MessageChannel channel = this.jda.getTextChannelById(this.channelId);
 
 		String value = "";
@@ -179,10 +180,20 @@ public class Main {
 				List<String> list = this.splitByLength(value, 1500);
 
 				for (String v : list) {
-					channel.sendMessage(v).queue();
+					MessageAction action = channel.sendMessage(v);
+					if (isComplete) {
+						action.complete();
+					} else {
+						action.queue();
+					}
 				}
 			} else {
-				channel.sendMessage(value).queue();
+				MessageAction action = channel.sendMessage(value);
+				if (isComplete) {
+					action.complete();
+				} else {
+					action.queue();
+				}
 			}
 		}
 	}

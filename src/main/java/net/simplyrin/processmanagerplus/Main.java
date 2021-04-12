@@ -55,6 +55,7 @@ public class Main {
 	private Configuration config;
 
 	private List<String> adminList = new ArrayList<>();
+	private List<String> muteList = new ArrayList<>();
 	private long channelId;
 
 	private ProcessManagerPlus processManagerPlus;
@@ -75,6 +76,7 @@ public class Main {
 
 			config.set("Discord.Token", "BOT_TOKEN_HERE");
 			config.set("Discord.AdminList", Arrays.asList("224428706209202177"));
+			config.set("Discord.MuteLine", Arrays.asList(">>", ">"));
 			config.set("Discord.Channel-ID", 0L);
 			Config.saveConfig(config, file);
 		}
@@ -84,7 +86,8 @@ public class Main {
 		String[] command = executeCommand.toArray(new String[executeCommand.size()]);
 
 		String token = this.config.getString("Discord.Token");
-		this.adminList = this.config.getStringList("Discord.AdminList");
+		this.adminList.addAll(this.config.getStringList("Discord.AdminList"));
+		this.muteList.addAll(this.config.getStringList("Discord.MuteList"));
 		this.channelId = this.config.getLong("Discord.Channel-ID", 0L);
 
 		if (!token.equals("BOT_TOKEN_HERE") && this.channelId != 0L) {
@@ -115,7 +118,9 @@ public class Main {
 		this.processManagerPlus = new ProcessManagerPlus(command, new Callback() {
 			public void line(String response) {
 				System.out.println(response);
-				queue.add(response);
+				if (!muteList.contains(response)) {
+					queue.add(response);
+				}
 			}
 
 			public void processEnded(int exitCode) {

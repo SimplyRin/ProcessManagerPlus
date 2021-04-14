@@ -25,9 +25,19 @@ ExecuteCommand:
 - -server
 - -Djline.terminal=jline.UnsupportedTerminal
 - BungeeCord.jar
+ConsoleMute:
+- 'equals|%20'
+- 'equals|>>'
+- 'equals|>'
 Discord:
   Token: DISCORD_BOT_TOKEN
   AdminList:
   - '管理者の Discord ID'
+  MuteList:
+  - 'equals|%20'
+  - 'equals|>>'
+  - 'equals|>'
+  - 'contains|AutoSaveWorld'
+  - "contains|Can't find method saveLevel"
   Channel-ID: 100000000000000000
 ```

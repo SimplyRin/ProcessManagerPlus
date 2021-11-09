@@ -4,7 +4,7 @@
 
   <groupId>net.simplyrin.processmanagerplus</groupId>
   <artifactId>ProcessManagerPlus</artifactId>
-  <version>1.1</version>
+  <version>1.2</version>
   <packaging>jar</packaging>
 
   <name>ProcessManagerPlus</name>
@@ -12,8 +12,8 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
+    <maven.compiler.source>16</maven.compiler.source>
+    <maven.compiler.target>16</maven.compiler.target>
   </properties>
 
   <build>
@@ -47,7 +47,6 @@
   <repositories>
     <repository>
       <id>net.simplyrin</id>
-      <name>api</name>
       <url>https://api.simplyrin.net/maven/</url>
     </repository>
     <repository>
@@ -61,7 +60,7 @@
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
-      <version>1.18.20</version>
+      <version>1.18.22</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -72,12 +71,17 @@
     <dependency>
       <groupId>net.simplyrin.config</groupId>
       <artifactId>Config</artifactId>
-      <version>1.0</version>
+      <version>1.2</version>
+    </dependency>
+    <dependency>
+      <groupId>net.simplyrin.rinstream</groupId>
+      <artifactId>RinStream</artifactId>
+      <version>1.4-java16</version>
     </dependency>
     <dependency>
       <groupId>net.dv8tion</groupId>
       <artifactId>JDA</artifactId>
-      <version>4.2.1_255</version>
+      <version>4.3.0_277</version>
    </dependency>
    <dependency>
      <groupId>commons-lang</groupId>

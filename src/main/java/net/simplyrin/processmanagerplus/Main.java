@@ -17,11 +17,12 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.requests.restaction.MessageAction;
 import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
-import net.md_5.bungee.config.Configuration;
 import net.simplyrin.config.Config;
+import net.simplyrin.config.Configuration;
 import net.simplyrin.processmanager.Callback;
 import net.simplyrin.processmanager.ProcessManagerPlus;
 import net.simplyrin.processmanagerplus.listener.CommandListener;
+import net.simplyrin.rinstream.ChatColor;
 
 /**
  * Created by SimplyRin on 2021/04/11.
@@ -58,7 +59,7 @@ public class Main {
 	private List<String> consoleMuteList = new ArrayList<>();
 
 	private List<String> adminList = new ArrayList<>();
-	private List<String> muteList = new ArrayList<>();
+	private List<String> discordMuteList = new ArrayList<>();
 	private long channelId;
 
 	private ProcessManagerPlus processManagerPlus;
@@ -76,11 +77,11 @@ public class Main {
 			config.set("WorkingDirectory", "minecraft_server");
 			config.set("CloseCommand", "stop");
 			config.set("ExecuteCommand", Arrays.asList("java", "-jar", "-Xms1G", "-Xmx2G", "-server", "spigot-1.16.5.jar", "nogui"));
-			config.set("ConsoleMute", Arrays.asList("equals|%20", "equals|>>", "equals|>", "contains|by SpigotMC"));
+			config.set("ConsoleMute", Arrays.asList("contains|by SpigotMC"));
 
 			config.set("Discord.Token", "BOT_TOKEN_HERE");
 			config.set("Discord.AdminList", Arrays.asList("224428706209202177"));
-			config.set("Discord.MuteLine", Arrays.asList("equals|%20", "equals|>>", "equals|>", "contains|by SpigotMC"));
+			config.set("Discord.MuteLine", Arrays.asList("contains|by SpigotMC", "contains|issued server command: /tps"));
 			config.set("Discord.Channel-ID", 0L);
 			Config.saveConfig(config, file);
 		}
@@ -92,8 +93,10 @@ public class Main {
 		this.consoleMuteList.addAll(this.config.getStringList("ConsoleMute"));
 
 		String token = this.config.getString("Discord.Token");
+		
 		this.adminList.addAll(this.config.getStringList("Discord.AdminList"));
-		this.muteList.addAll(this.config.getStringList("Discord.MuteList"));
+		this.discordMuteList.addAll(this.config.getStringList("Discord.MuteList"));
+		
 		this.channelId = this.config.getLong("Discord.Channel-ID", 0L);
 
 		if (!token.equals("BOT_TOKEN_HERE") && this.channelId != 0L) {
@@ -128,7 +131,7 @@ public class Main {
 					System.out.println(response);
 				}
 
-				if (!isMute(muteList, response)) {
+				if (!isMute(discordMuteList, response)) {
 					queue.add(response);
 				}
 			}
@@ -155,8 +158,11 @@ public class Main {
 	}
 
 	public boolean isMute(List<String> muteList, String response) {
+		response = ChatColor.translate(response);
+		response = ChatColor.stripColor(response);
+		
 		boolean isMute = false;
-		for (String list : consoleMuteList) {
+		for (String list : muteList) {
 			String[] args = list.split("[|]");
 
 			String type = args[0];

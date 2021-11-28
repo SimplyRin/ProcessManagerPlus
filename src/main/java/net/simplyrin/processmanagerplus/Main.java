@@ -7,14 +7,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
-import org.apache.commons.lang.StringUtils;
-
 import lombok.Getter;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.requests.GatewayIntent;
-import net.dv8tion.jda.api.requests.restaction.MessageAction;
 import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.simplyrin.config.Config;
@@ -63,6 +60,8 @@ public class Main {
 	private long channelId;
 
 	private ProcessManagerPlus processManagerPlus;
+
+	private List<String> queue = new ArrayList<>();
 
 	public void run(String customConfigName) {
 		File file = new File(customConfigName != null ? customConfigName : "ProcessManagerPlus.yml");
@@ -132,7 +131,9 @@ public class Main {
 				}
 
 				if (!isMute(discordMuteList, response)) {
-					queue.add(response);
+					synchronized (queue) {
+						queue.add(response);
+					}
 				}
 			}
 
@@ -149,7 +150,7 @@ public class Main {
 			String line = scanner.nextLine();
 			this.processManagerPlus.sendCommand(line);
 
-			if (line.equalsIgnoreCase(config.getString("CloseCommand"))) {
+			if (line.equalsIgnoreCase(this.config.getString("CloseCommand"))) {
 				break;
 			}
 		}
@@ -185,8 +186,6 @@ public class Main {
 		this.processManagerPlus.sendCommand(command);
 	}
 
-	private List<String> queue = new ArrayList<>();
-
 	public void sendQueue() {
 		new Thread() {
 			@Override
@@ -205,45 +204,26 @@ public class Main {
 
 	public void forceSendQueue(boolean isComplete) {
 		MessageChannel channel = this.jda.getTextChannelById(this.channelId);
-
+		
 		String value = "";
-		for (String line : this.queue) {
-			value += line + "\n";
-		}
-		this.queue.clear();
 
-		if (value.length() >= 4) {
-			if (value.length() >= 1500) {
-				List<String> list = this.splitByLength(value, 1500);
-
-				for (String v : list) {
-					MessageAction action = channel.sendMessage(v);
-					if (isComplete) {
-						action.complete();
-					} else {
-						action.queue();
-					}
+		synchronized (this.queue) {
+			boolean isSend = false;
+			for (String line : this.queue) {
+				if ((value + line + "\n").length() > 2000) {
+					channel.sendMessage(value).complete();
+					isSend = true;
+					value = "";
 				}
-			} else {
-				MessageAction action = channel.sendMessage(value);
-				if (isComplete) {
-					action.complete();
-				} else {
-					action.queue();
-				}
+				
+				value += line + "\n";
 			}
+			if (!isSend && value.length() >= 1) {
+				channel.sendMessage(value).complete();
+			}
+			this.queue.clear();
 		}
-	}
-
-	/**
-	 * Source: https://www.kz62.net/articles/2018-08-09/java-split-length/
-	 */
-	public List<String> splitByLength(String str, int length) {
-		List<String> strs = new ArrayList<>();
-		for (int i = 0; i < StringUtils.length(str); i += length) {
-			strs.add(StringUtils.substring(str, i, i + length));
-		}
-		return strs;
+		
 	}
 
 }

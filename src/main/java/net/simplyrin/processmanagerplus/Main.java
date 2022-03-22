@@ -232,19 +232,16 @@ public class Main {
 		String value = "";
 
 		synchronized (this.queue) {
-			boolean isSend = false;
-
 			try {
 				for (String line : this.queue) {
 					if ((value + line + "\n").length() >= 2000) {
 						channel.sendMessage(value).queue();
-						isSend = true;
 						value = "";
 					}
 					
 					value += line + "\n";
 				}
-				if (!isSend && value.length() >= 1) {
+				if (value.length() >= 1) {
 					channel.sendMessage(value).queue();
 				}
 				this.queue.clear();

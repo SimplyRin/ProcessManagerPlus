@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
+import java.util.concurrent.TimeUnit;
 
 import lombok.Getter;
 import net.dv8tion.jda.api.JDA;
@@ -164,6 +165,16 @@ public class Main {
 			this.jda.addEventListener(new CommandListener(this));
 		} catch (Exception e) {
 			e.printStackTrace();
+			
+			new Thread(() -> {
+				try {
+					TimeUnit.SECONDS.sleep(30);
+				} catch (InterruptedException e1) {
+					e1.printStackTrace();
+				}
+				
+				this.reconnectJDA();
+			}).start();
 		}
 	}
 

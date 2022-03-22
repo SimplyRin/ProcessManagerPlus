@@ -237,7 +237,7 @@ public class Main {
 			try {
 				for (String line : this.queue) {
 					if ((value + line + "\n").length() >= 2000) {
-						channel.sendMessage(value).complete();
+						channel.sendMessage(value).queue();
 						isSend = true;
 						value = "";
 					}
@@ -245,7 +245,7 @@ public class Main {
 					value += line + "\n";
 				}
 				if (!isSend && value.length() >= 1) {
-					channel.sendMessage(value).complete();
+					channel.sendMessage(value).queue();
 				}
 				this.queue.clear();
 			} catch (Exception e) {

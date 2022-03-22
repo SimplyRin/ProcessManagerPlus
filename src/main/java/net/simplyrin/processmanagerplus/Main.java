@@ -1,11 +1,18 @@
 package net.simplyrin.processmanagerplus;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
+
+import com.pty4j.PtyProcess;
+import com.pty4j.PtyProcessBuilder;
 
 import lombok.Getter;
 import net.dv8tion.jda.api.JDA;
@@ -16,8 +23,6 @@ import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.simplyrin.config.Config;
 import net.simplyrin.config.Configuration;
-import net.simplyrin.processmanager.Callback;
-import net.simplyrin.processmanager.ProcessManagerPlus;
 import net.simplyrin.processmanagerplus.listener.CommandListener;
 import net.simplyrin.rinstream.ChatColor;
 
@@ -59,7 +64,8 @@ public class Main {
 	private List<String> discordMuteList = new ArrayList<>();
 	private long channelId;
 
-	private ProcessManagerPlus processManagerPlus;
+	private PtyProcess process;
+	private OutputStream outputStream;
 
 	private List<String> queue = new ArrayList<>();
 
@@ -118,37 +124,57 @@ public class Main {
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override
 			public void run() {
-				forceSendQueue(true);
+				forceSendQueue();
 			}
 		});
 		this.sendQueue();
+		
+		PtyProcessBuilder builder = new PtyProcessBuilder(command)
+				.setDirectory(config.getString("WorkingDirectory"))
+				.setWindowsAnsiColorEnabled(true);
+		try {
+			this.process = builder.start();
+		} catch (IOException e) {
+			e.printStackTrace();
+			return;
+		}
+		
+		this.outputStream = this.process.getOutputStream();
+		
+		new Thread(() -> {
+			BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(this.process.getInputStream()));
+			String response = null;
+			try {
+				while ((response = bufferedReader.readLine()) != null) {
+					if (!this.isMute(this.consoleMuteList, response)) {
+						System.out.println(response);
+					}
 
-		this.processManagerPlus = new ProcessManagerPlus(command, new Callback() {
-			@Override
-			public void line(String response) {
-				if (!isMute(consoleMuteList, response)) {
-					System.out.println(response);
-				}
-
-				if (!isMute(discordMuteList, response)) {
-					synchronized (queue) {
-						queue.add(response);
+					if (!this.isMute(this.discordMuteList, response)) {
+						synchronized (this.queue) {
+							this.queue.add(response);
+						}
 					}
 				}
+			} catch (Exception e) {
 			}
-
-			@Override
-			public void processEnded(int exitCode) {
-				System.exit(exitCode);
+		}).start();
+		
+		Runnable runnable = () -> {
+			int exitCode = 0;
+			try {
+				exitCode = this.process.waitFor();
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
-		});
-		this.processManagerPlus.setWorkingDirectory(new File(config.getString("WorkingDirectory")));
-		this.processManagerPlus.start();
+			System.exit(exitCode);
+		};
+		new Thread(runnable).start();
 
 		Scanner scanner = new Scanner(System.in);
 		while (true) {
 			String line = scanner.nextLine();
-			this.processManagerPlus.sendCommand(line);
+			this.sendCommand(line);
 
 			if (line.equalsIgnoreCase(this.config.getString("CloseCommand"))) {
 				break;
@@ -183,7 +209,12 @@ public class Main {
 	}
 
 	public void sendCommand(String command) {
-		this.processManagerPlus.sendCommand(command);
+		var output = new OutputStreamWriter(this.outputStream);
+		try {
+			output.write(command + "\n");
+			output.flush();
+		} catch (Exception e) {
+		}
 	}
 
 	public void sendQueue() {
@@ -191,7 +222,7 @@ public class Main {
 			@Override
 			public void run() {
 				while (true) {
-					forceSendQueue(false);
+					forceSendQueue();
 
 					try {
 						Thread.sleep(1000 * 3);
@@ -202,7 +233,7 @@ public class Main {
 		}.start();
 	}
 
-	public void forceSendQueue(boolean isComplete) {
+	public void forceSendQueue() {
 		MessageChannel channel = this.jda.getTextChannelById(this.channelId);
 		
 		String value = "";

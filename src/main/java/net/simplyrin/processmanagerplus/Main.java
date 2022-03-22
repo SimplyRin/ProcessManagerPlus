@@ -99,20 +99,7 @@ public class Main {
 		this.channelId = this.config.getLong("Discord.Channel-ID", 0L);
 
 		if (!token.equals("BOT_TOKEN_HERE") && this.channelId != 0L) {
-			try {
-				List<GatewayIntent> list = new ArrayList<>();
-				for (GatewayIntent intent : GatewayIntent.values()) {
-					list.add(intent);
-				}
-				JDABuilder jdaBuilder = JDABuilder.createDefault(token, list);
-				jdaBuilder.setMemberCachePolicy(MemberCachePolicy.ALL);
-				jdaBuilder.setChunkingFilter(ChunkingFilter.ALL);
-				this.jda = jdaBuilder.build().awaitReady();
-
-				this.jda.addEventListener(new CommandListener(this));
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+			this.reconnectJDA();
 		}
 
 		Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -156,6 +143,23 @@ public class Main {
 		}
 
 		scanner.close();
+	}
+	
+	public void reconnectJDA() {
+		try {
+			List<GatewayIntent> list = new ArrayList<>();
+			for (GatewayIntent intent : GatewayIntent.values()) {
+				list.add(intent);
+			}
+			JDABuilder jdaBuilder = JDABuilder.createDefault(this.config.getString("Discord.Token"), list);
+			jdaBuilder.setMemberCachePolicy(MemberCachePolicy.ALL);
+			jdaBuilder.setChunkingFilter(ChunkingFilter.ALL);
+			this.jda = jdaBuilder.build().awaitReady();
+
+			this.jda.addEventListener(new CommandListener(this));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	public boolean isMute(List<String> muteList, String response) {
@@ -209,19 +213,24 @@ public class Main {
 
 		synchronized (this.queue) {
 			boolean isSend = false;
-			for (String line : this.queue) {
-				if ((value + line + "\n").length() > 2000) {
-					channel.sendMessage(value).complete();
-					isSend = true;
-					value = "";
+
+			try {
+				for (String line : this.queue) {
+					if ((value + line + "\n").length() >= 2000) {
+						channel.sendMessage(value).complete();
+						isSend = true;
+						value = "";
+					}
+					
+					value += line + "\n";
 				}
-				
-				value += line + "\n";
+				if (!isSend && value.length() >= 1) {
+					channel.sendMessage(value).complete();
+				}
+				this.queue.clear();
+			} catch (Exception e) {
+				this.reconnectJDA();
 			}
-			if (!isSend && value.length() >= 1) {
-				channel.sendMessage(value).complete();
-			}
-			this.queue.clear();
 		}
 		
 	}

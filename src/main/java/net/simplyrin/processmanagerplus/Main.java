@@ -147,6 +147,11 @@ public class Main {
 	
 	public void reconnectJDA() {
 		try {
+			if (this.jda != null) {
+				this.jda.shutdownNow();
+				this.jda = null;
+			}
+			
 			List<GatewayIntent> list = new ArrayList<>();
 			for (GatewayIntent intent : GatewayIntent.values()) {
 				list.add(intent);
@@ -207,6 +212,10 @@ public class Main {
 	}
 
 	public void forceSendQueue(boolean isComplete) {
+		if (this.jda == null) {
+			return;
+		}
+		
 		MessageChannel channel = this.jda.getTextChannelById(this.channelId);
 		
 		String value = "";

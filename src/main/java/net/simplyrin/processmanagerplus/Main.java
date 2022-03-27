@@ -78,11 +78,16 @@ public class Main {
 			config.set("CloseCommand", "stop");
 			config.set("ExecuteCommand", Arrays.asList("java", "-jar", "-Xms1G", "-Xmx2G", "-server", "spigot-1.16.5.jar", "nogui"));
 			config.set("ConsoleMute", Arrays.asList("contains|by SpigotMC"));
-
+			config.set("ShowDebug", false);
+			
 			config.set("Discord.Token", "BOT_TOKEN_HERE");
 			config.set("Discord.AdminList", Arrays.asList("224428706209202177"));
 			config.set("Discord.MuteLine", Arrays.asList("contains|by SpigotMC", "contains|issued server command: /tps"));
 			config.set("Discord.Channel-ID", 0L);
+			config.set("Discord.SendDebug", false);
+
+			config.set("Message.Disconnect", "[デバッグ] API から何らかの問題で切断されたため、30秒後 JDA を再起動します。");
+			config.set("Message.Connect", "[デバッグ] JDA を再起動しています...。");
 			Config.saveConfig(config, file);
 		}
 
@@ -120,7 +125,7 @@ public class Main {
 
 				if (!isMute(discordMuteList, response)) {
 					synchronized (queue) {
-						queue.add(response);
+						addQueue(response);
 					}
 				}
 			}
@@ -149,6 +154,16 @@ public class Main {
 	public void reconnectJDA() {
 		try {
 			if (this.jda != null) {
+				var debugMsg = this.config.getString("Message.Connect");
+				
+				if (this.config.getBoolean("ShowDebug")) {
+					System.out.println(debugMsg);
+				}
+				
+				if (this.config.getBoolean("Discord.SendDebug")) {
+					this.addQueue(debugMsg);
+				}
+				
 				this.jda.shutdownNow();
 				this.jda = null;
 			}
@@ -167,6 +182,16 @@ public class Main {
 			e.printStackTrace();
 			
 			new Thread(() -> {
+				var debugMsg = this.config.getString("Message.Disconnect");
+				
+				if (this.config.getBoolean("ShowDebug")) {
+					System.out.println(debugMsg);
+				}
+				
+				if (this.config.getBoolean("Discord.SendDebug")) {
+					this.addQueue(debugMsg);
+				}
+				
 				try {
 					TimeUnit.SECONDS.sleep(30);
 				} catch (InterruptedException e1) {
@@ -204,6 +229,12 @@ public class Main {
 
 	public void sendCommand(String command) {
 		this.processManagerPlus.sendCommand(command);
+	}
+	
+	public synchronized void addQueue(String message) {
+		synchronized (this.queue) {
+			this.queue.add(message);
+		}
 	}
 
 	public void sendQueue() {

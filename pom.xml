@@ -4,7 +4,7 @@
 
   <groupId>net.simplyrin.processmanagerplus</groupId>
   <artifactId>ProcessManagerPlus</artifactId>
-  <version>1.3.2</version>
+  <version>1.3.3</version>
   <packaging>jar</packaging>
 
   <name>ProcessManagerPlus</name>

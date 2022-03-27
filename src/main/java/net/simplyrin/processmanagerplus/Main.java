@@ -231,7 +231,7 @@ public class Main {
 		this.processManagerPlus.sendCommand(command);
 	}
 	
-	public synchronized void addQueue(String message) {
+	public void addQueue(String message) {
 		synchronized (this.queue) {
 			this.queue.add(message);
 		}

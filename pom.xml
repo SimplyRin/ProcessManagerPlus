@@ -76,7 +76,7 @@
     <dependency>
       <groupId>net.simplyrin.rinstream</groupId>
       <artifactId>RinStream</artifactId>
-      <version>1.4-java16</version>
+      <version>1.4.1-java16</version>
     </dependency>
     <dependency>
       <groupId>net.dv8tion</groupId>
